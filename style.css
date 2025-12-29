@@ -1,0 +1,220 @@
+/* Basic layout */
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  margin-top: 50px;
+  padding: 20px;
+}
+
+#breakfast-suggestion {
+  margin-bottom: 20px;
+}
+
+#breakfast-image {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  margin-top: 20px;
+  display: none;
+}
+
+/* Center breakfast image */
+#breakfast-suggestion img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.button-container {
+  margin-top: 40px;
+}
+
+/* ——————————————————————————
+   Floating Bottom-Left Controls
+   —————————————————————————— */
+
+.floating-controls {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  display: flex;
+  gap: 10px;
+  z-index: 200;
+}
+
+.floating-controls button {
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+/* Remove old bottom-right placement if exists */
+#all-breakfasts-button {
+  position: static !important;
+}
+
+/* Buttons */
+button {
+  padding: 10px 16px;
+  margin: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+}
+
+/* Modal backdrop */
+.modal {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.45);
+  z-index: 100;
+}
+
+/* Modal window */
+.modal-content {
+  background-color: #fff;
+  margin: 7% auto;
+  padding: 20px;
+  width: 60%;
+  max-width: 700px;
+  border-radius: 8px;
+  position: relative; 
+}
+
+.modal-content.small {
+  width: 360px;
+  max-width: 90%;
+}
+
+/* show modal when JS adds class "show" */
+.modal.show {
+  display: block;
+  pointer-events: auto;  /* allow clicks inside the modal */
+}
+
+/* ——————————————————————————
+   Close buttons (fixed)
+   —————————————————————————— */
+
+.close,
+.close-add,
+.close-deleted {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 28px;
+  cursor: pointer;
+  user-select: none;
+  color: #333;
+}
+
+.close:hover,
+.close-add:hover,
+.close-deleted:hover {
+  color: black;
+}
+
+/* Breakfast list */
+#breakfast-list,
+#deleted-list {
+  list-style-type: none;
+  padding-left: 0;
+  max-height: 60vh;
+  overflow: auto;
+  text-align: left;
+}
+
+#breakfast-list li,
+#deleted-list li {
+  margin: 10px 0;
+  cursor: pointer;
+  padding: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+/* File drop */
+.file-drop {
+  display: block;
+  padding: 12px;
+  border: 2px dashed #bbb;
+  margin: 10px 0;
+  cursor: pointer;
+  border-radius: 6px;
+  text-align: center;
+  color: #666;
+}
+
+.file-drop input[type="file"] {
+  display: none;
+}
+
+/* Form button row */
+.form-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Back button in breakfast page */
+.back-button {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+/* Breakfast page layout */
+.breakfast-page {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 30px;
+}
+
+.breakfast-page img {
+  width: 320px;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.notes {
+  max-width: 420px;
+  text-align: left;
+}
+
+textarea {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+  .breakfast-page {
+    flex-direction: column;
+    align-items: center;
+  }
+  .notes { width: 90%; }
+}

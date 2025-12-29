@@ -1,0 +1,20 @@
+[
+  {
+    "id": "mibnfzjy5aoayx",
+    "name": "Omelette",
+    "image": "images/img_1763898197172.jpg",
+    "notes": ""
+  },
+  {
+    "id": "mibndqmo9ygamw",
+    "name": "Watermelon Bowl",
+    "image": "images/img_1763898092300.avif",
+    "notes": ""
+  },
+  {
+    "id": "mjqtnx47t0u4oc",
+    "name": "Idly",
+    "image": "http://localhost:3000/",
+    "notes": ""
+  }
+]

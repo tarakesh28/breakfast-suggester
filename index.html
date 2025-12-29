@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Breakfast Suggester</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#C43718">
+</head>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => console.log("Service Worker registered"))
+      .catch(err => console.error("SW registration failed:", err));
+  }
+</script>
+<body>
+
+  <div class="container" id="main-container">
+    <h1>Today's Breakfast Suggestion</h1>
+
+    <div id="breakfast-suggestion">
+      <h2 id="breakfast-name">Click "Suggest Breakfast"!</h2>
+      <img id="breakfast-image" src="" alt="Breakfast Image" style="display:none;" />
+    </div>
+
+    <div class="button-container">
+      <button id="suggest-button">Suggest Breakfast</button>
+      <button id="add-breakfast-button">Add Breakfast</button>
+    </div>
+  </div>
+
+  <!-- Floating bottom-left buttons -->
+  <div class="floating-controls">
+    <button id="all-breakfasts-button">All Breakfasts</button>
+    <button id="recently-deleted-button">Recently Deleted</button>
+  </div>
+
+  <!-- All Breakfasts Modal -->
+  <div id="all-breakfasts-modal" class="modal">
+    <div class="modal-content">
+      <span class="close close-all">&times;</span>
+      <h2>All Breakfasts</h2>
+      <ul id="breakfast-list"></ul>
+    </div>
+  </div>
+
+  <!-- Add Breakfast Modal -->
+  <div id="add-breakfast-modal" class="modal">
+    <div class="modal-content small">
+      <span class="close-add">&times;</span>
+      <h2>Add Breakfast (will write files to disk)</h2>
+
+      <form id="add-breakfast-form">
+        <label>
+          Name:
+          <input type="text" id="new-name" required />
+        </label>
+
+        <label for="image-input" class="file-drop" id="file-drop">
+          <div>Drag & Drop image here or click to select</div>
+          <input type="file" id="image-input" accept="image/*" />
+        </label>
+
+        <div id="preview-wrapper" style="display:none">
+          <p>Preview:</p>
+          <img id="preview-image" src="" alt="preview" style="max-width:200px;max-height:150px;" />
+        </div>
+
+        <label style="font-size:0.9rem;">
+          <input type="checkbox" id="save-to-scriptjs"> Also try to append to <code>script.js</code>
+        </label>
+
+        <div class="form-buttons">
+          <button type="submit">Save to disk</button>
+          <button type="button" id="cancel-add">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Recently Deleted Modal -->
+  <div id="deleted-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-deleted">&times;</span>
+      <h2>Recently Deleted Breakfasts</h2>
+      <ul id="deleted-list"></ul>
+    </div>
+  </div>
+
+  <!-- Confirm delete modal -->
+  <div id="confirm-modal" class="modal">
+    <div class="modal-content small">
+      <h3 id="confirm-text">Are you sure?</h3>
+      <div class="form-buttons">
+        <button id="confirm-yes">Yes, delete</button>
+        <button id="confirm-no">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
