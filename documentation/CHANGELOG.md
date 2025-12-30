@@ -1,23 +1,11 @@
 # CHANGELOG
 
-## BSAv1.0.0
+## BSA v1.0.1
 
-### Added
-- `manifest.json`
-  - Defines web app metadata required for Progressive Web App (PWA) support.
-- `service-worker.js`
-  - Enables caching of core application files for offline usage.
+### Deployed
+- Hosted the application on GitHub Pages
+  - App is now publicly accessible via a stable URL.
+  - Enables testing PWA behavior on real devices.
 
-### Changed
-- `index.html`
-  - Linked the web app manifest.
-  - Registered the service worker.
-
-### Deleted
-- Removed unnecessary documentation like tasks, bugs, change-log
-- new documentation includes compact and efficient CHANGELOG.md (yes, this file) and priorities.md
-
-### Notes
-- This version prepares the project for Progressive Web App behavior.
-- Core app files can now be cached by the browser.
-- Full installability depends on HTTPS hosting and access from a mobile browser.
+### Documentation
+- Updated priorities to reflect move toward IndexedDB-based storage
