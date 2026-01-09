@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-  margin-top: 50px;
+  margin-top: 10px;
   padding: 20px;
 }
 
@@ -217,4 +217,13 @@ textarea {
     align-items: center;
   }
   .notes { width: 90%; }
+}
+
+/* Disable background interaction when any modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
+body.modal-open *:not(.modal):not(.modal *) {
+  pointer-events: none;
 }

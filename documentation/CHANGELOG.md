@@ -1,11 +1,21 @@
 # CHANGELOG
 
-## BSA v1.0.1
+## BSA v1.1.0
 
-### Deployed
-- Hosted the application on GitHub Pages
-  - App is now publicly accessible via a stable URL.
-  - Enables testing PWA behavior on real devices.
+### Added
+- IndexedDB-based storage for breakfasts, notes, and images
+- Offline-first data persistence suitable for mobile and PWA usage
+- Recently Deleted system with restore and permanent delete
+- Default breakfasts automatically created on first run
 
-### Documentation
-- Updated priorities to reflect move toward IndexedDB-based storage
+### Changed
+- Removed dependency on Node backend for data storage
+- Breakfast images stored as Blobs in browser storage
+- App can now be tested fully offline using local or hosted static servers
+
+### Known Issues
+- Some UI interactions can be inconsistent on mobile devices
+- Restore action may occasionally require retry
+- Image restoration on mobile is not always reliable
+
+These issues are planned to be addressed in v1.2.0.

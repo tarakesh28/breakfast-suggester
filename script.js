@@ -1,3 +1,4 @@
+import { getAll, put, remove } from './db.js';
 // script.js (DOM-ready, wires all buttons in your current index.html)
 // Works with the Node server endpoints if present (/data, /upload-image, /save-data, /deleted, /save-deleted).
 const API_PREFIX = ''; // keep empty if same origin (http://localhost:3000)
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // initialize: load data from server (if available) or use defaults
   (async function init() {
-    await loadDataFromServer();
+    await loadBreakfasts();
   })();
 
   // Wire events (only if the elements exist)
@@ -55,9 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (recentlyDeletedBtn) recentlyDeletedBtn.addEventListener("click", openDeletedModal);
 
   // close buttons
-  document.querySelectorAll('.close').forEach(el => el && el.addEventListener('click', () => { if (allModal) allModal.classList.remove('show'); }));
+  document.querySelectorAll('.close').forEach(el => el && el.addEventListener('click', () => { if (allModal) allModal.classList.remove('show'); document.body.classList.remove("modal-open");}));
   document.querySelectorAll('.close-add').forEach(el => el && el.addEventListener('click', () => closeAddModal()));
-  document.querySelectorAll('.close-deleted').forEach(el => el && el.addEventListener('click', () => { if (deletedModal) deletedModal.classList.remove('show'); }));
+  document.querySelectorAll('.close-deleted').forEach(el => el && el.addEventListener('click', () => { if (deletedModal) deletedModal.classList.remove('show'); document.body.classList.remove("modal-open");}));
   if (cancelAddBtn) cancelAddBtn.addEventListener("click", () => closeAddModal());
   if (confirmNo) confirmNo.addEventListener("click", () => { if (confirmModal) confirmModal.classList.remove('show'); });
 
@@ -81,100 +82,59 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = nameInput.value.trim();
       if (!name) return alert("Please enter a name.");
 
-      // upload image if file chosen
-      let imagePath = "";
-      if (previewImage && previewImage._file) {
-        const file = previewImage._file;
-        const form = new FormData();
-        form.append('image', file);
-        form.append('name', name);
-        try {
-          const resp = await fetch(`${API_PREFIX}/upload-image`, { method: 'POST', body: form });
-          const j = await resp.json();
-          if (!j.ok) throw new Error(j.error || 'Upload failed');
-          imagePath = j.path;
-        } catch (err) {
-          console.error(err);
-          return alert('Image upload failed: ' + err.message);
-        }
-      } else if (previewImage && previewImage.src) {
-        imagePath = previewImage.src;
-      }
+      const newBreakfast = {
+        id: genId(),
+        name: name,
+        notes: "",
+        image: previewImage._file || null, // <-- THIS is the fix
+        createdAt: Date.now()
+      };
 
-      const newB = { id: genId(), name, image: imagePath || "", notes: "" };
-      breakfasts.push(newB);
 
-      try { await saveBreakfastsToServer(); } 
-      catch (err) { console.error(err); return alert('Failed to save breakfasts: ' + err.message); }
+      // Save to IndexedDB
+      await put("breakfasts", newBreakfast);
 
-      if (saveToScriptJsCheckbox && saveToScriptJsCheckbox.checked) {
-        try {
-          await fetch(`${API_PREFIX}/append-to-scriptjs`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newB)
-          }).then(r => r.json()).then(res => { if (!res.ok) console.warn('append-to-scriptjs:', res); });
-        } catch (e) { console.warn('append-to-scriptjs error', e); }
-      }
+      // Update in-memory list so UI updates immediately
+      breakfasts.push(newBreakfast);
 
+      // Reset UI
+      nameInput.value = "";
       closeAddModal();
-      alert('Breakfast added and saved.');
     });
   }
 
   /* ----- Core functions ----- */
 
-  async function loadDataFromServer() {
-    try {
-      const dresp = await fetch(`${API_PREFIX}/data`);
-      breakfasts = dresp.ok ? await dresp.json() : [];
-    } catch (e) {
-      console.warn('Could not load /data, using defaults', e);
-      breakfasts = [
-        { id: genId(), name: "Pancakes", image: "images/pancakes.jpg", notes: "" },
-        { id: genId(), name: "Omelette", image: "images/omelette.jpg", notes: "" },
-        { id: genId(), name: "French Toast", image: "images/french-toast.jpg", notes: "" }
-      ];
-    }
+  async function loadBreakfasts() {
+  breakfasts = await getAll('breakfasts');
 
-    try {
-      const delResp = await fetch(`${API_PREFIX}/deleted`);
-      deletedBreakfasts = delResp.ok ? await delResp.json() : [];
-    } catch (e) {
-      deletedBreakfasts = [];
+  if (!breakfasts || breakfasts.length === 0) {
+    breakfasts = [
+      { id: genId(), name: "Pancakes", notes: "", image: null, createdAt: Date.now() },
+      { id: genId(), name: "Omelette", notes: "", image: null, createdAt: Date.now() },
+      { id: genId(), name: "French Toast", notes: "", image: null, createdAt: Date.now() }
+    ];
+
+    for (const b of breakfasts) {
+      await put('breakfasts', b);
     }
   }
-
-  async function saveBreakfastsToServer() {
-    const resp = await fetch(`${API_PREFIX}/save-data`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(breakfasts)
-    });
-    const j = await resp.json();
-    if (!j.ok) throw new Error(j.error || 'save-data failed');
-  }
-
-  async function saveDeletedToServer() {
-    const resp = await fetch(`${API_PREFIX}/save-deleted`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(deletedBreakfasts)
-    });
-    const j = await resp.json();
-    if (!j.ok) throw new Error(j.error || 'save-deleted failed');
-  }
+}
 
   function openAddModal() {
     if (!addModal) return;
     addModal.classList.add('show');
+    document.body.classList.add("modal-open");
     if (nameInput) nameInput.value = "";
     if (previewWrapper) previewWrapper.style.display = "none";
     if (previewImage) { previewImage.src = ""; previewImage._file = null; }
     if (fileInput) fileInput.value = "";
     if (saveToScriptJsCheckbox) saveToScriptJsCheckbox.checked = false;
   }
-  function closeAddModal() { if (addModal) addModal.classList.remove('show'); }
+  function closeAddModal() { 
+    if (addModal) addModal.classList.remove('show');
+    document.body.classList.remove("modal-open");
+  }
 
   function handleFileSelected(file) {
     if (!file.type.startsWith("image/")) return alert("Please select an image file.");
@@ -207,11 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     lastSuggestedId = candidate.id;
     breakfastNameEl.innerText = candidate.name || "Breakfast";
-    if (candidate.image && breakfastImageEl) {
-      breakfastImageEl.src = candidate.image;
+    if (candidate.image) {
+      breakfastImageEl.src = URL.createObjectURL(candidate.image);
       breakfastImageEl.style.display = "block";
-    } else if (breakfastImageEl) {
-      breakfastImageEl.style.display = "none";
+    } else {
+    breakfastImageEl.style.display = "none";
     }
   }
 
@@ -225,14 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
       breakfastListEl.appendChild(li);
     });
     allModal.classList.add('show');
+    document.body.classList.add("modal-open");
   }
 
   async function openDeletedModal() {
     if (!deletedModal || !deletedListEl) return;
-    try {
-      const delResp = await fetch(`${API_PREFIX}/deleted`);
-      deletedBreakfasts = delResp.ok ? await delResp.json() : deletedBreakfasts || [];
-    } catch (e) { deletedBreakfasts = deletedBreakfasts || []; }
+    deletedBreakfasts = await getAll("deletedBreakfasts");
 
     deletedListEl.innerHTML = "";
     (deletedBreakfasts || []).forEach((b) => {
@@ -242,22 +200,23 @@ document.addEventListener('DOMContentLoaded', () => {
       restoreBtn.textContent = "Restore";
       restoreBtn.style.marginLeft = "8px";
       restoreBtn.addEventListener('click', async () => {
+        restoreBtn.disabled = true;
+        // restore to main store
+        await put('breakfasts', b);
         breakfasts.push(b);
+        // remove from deleted store
+        await remove('deletedBreakfasts', b.id);
         deletedBreakfasts = deletedBreakfasts.filter(x => x.id !== b.id);
-        await saveBreakfastsToServer();
-        await saveDeletedToServer();
         openDeletedModal();
-        alert('Restored ' + b.name);
       });
       const delForeverBtn = document.createElement("button");
       delForeverBtn.textContent = "Delete forever";
       delForeverBtn.style.marginLeft = "8px";
       delForeverBtn.addEventListener('click', async () => {
-        if (!confirm('Permanently delete "'+b.name+'"? This cannot be undone.')) return;
+        if (!confirm(`Permanently delete "${b.name}"? This cannot be undone.`)) return;
+        await remove('deletedBreakfasts', b.id);
         deletedBreakfasts = deletedBreakfasts.filter(x => x.id !== b.id);
-        await saveDeletedToServer();
         openDeletedModal();
-        alert('Deleted permanently.');
       });
       li.appendChild(document.createElement("br"));
       li.appendChild(restoreBtn);
@@ -265,9 +224,11 @@ document.addEventListener('DOMContentLoaded', () => {
       deletedListEl.appendChild(li);
     });
     deletedModal.classList.add('show');
+    document.body.classList.add("modal-open");
   }
 
   function viewBreakfastPage(id) {
+    document.body.classList.remove("modal-open");
     const b = (breakfasts || []).find(x => x.id === id);
     if (!b) return alert("Breakfast not found.");
 
@@ -276,7 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="breakfast-page">
         <div>
           <h1 id="breakfast-title">${escapeHtml(b.name)}</h1>
-          ${b.image ? `<img src="${b.image}" alt="${escapeHtml(b.name)}">` : `<div style="width:320px;height:320px;display:flex;align-items:center;justify-content:center;background:#eee;border-radius:6px;">No image</div>`}
+          <img id="detail-image" style="display:none;">
+          <div id="no-image" style="width:320px;height:320px;display:flex;align-items:center;justify-content:center;background:#eee;border-radius:6px;">
+            No image
+          </div>
         </div>
 
         <div class="notes">
@@ -293,6 +257,14 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
     document.body.innerHTML = html;
+    const detailImg = document.getElementById("detail-image");
+    const noImg = document.getElementById("no-image");
+
+    if (b.image instanceof Blob) {
+      detailImg.src = URL.createObjectURL(b.image);
+      detailImg.style.display = "block";
+      noImg.style.display = "none";
+    }
 
     const backMain = document.getElementById("back-main");
     if (backMain) backMain.addEventListener("click", (e) => { e.preventDefault(); location.reload(); });
@@ -320,13 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newNotes = notesEditor.value;
       b.name = newName;
       b.notes = newNotes;
-      try {
-        await saveBreakfastsToServer();
-      } catch (err) {
-        console.error("Failed to save changes:", err);
-        alert("Failed to save changes: " + err.message);
-        return;
-      }
+      await put("breakfasts", b);
       titleEl.textContent = b.name;
       titleEl.style.display = "block";
       notesDisplay.textContent = b.notes || "(No notes yet)";
@@ -335,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
       notesEditor.style.display = "none";
       editBtn.style.display = "inline-block";
       saveBtn.style.display = "none";
-      alert("Saved changes.");
     });
 
     // re-select newly created confirm modal/buttons from the new DOM
@@ -346,63 +311,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (deleteBtn) {
       deleteBtn.addEventListener("click", async () => {
-        // If the confirm modal exists in DOM, use it; otherwise use window.confirm as a fallback.
-        if (newConfirmModal && newConfirmYes && newConfirmNo) {
-          confirmText.textContent = `Confirm deletion of "${b.name}"? This will move it to Recently Deleted.`;
-          newConfirmModal.classList.add('show');
+        // Move breakfast to Recently Deleted (IndexedDB)
+        deletedBreakfasts.push(b);
+        const deletedCopy = structuredClone(b);
+        await put("deletedBreakfasts", deletedCopy);
+        await remove("breakfasts", b.id);
 
-          const onYes = async () => {
-            // perform deletion
-            deletedBreakfasts.push(b);
-            breakfasts = breakfasts.filter(x => x.id !== b.id);
+        // Remove from active breakfasts (IndexedDB)
+        breakfasts = breakfasts.filter(x => x.id !== b.id);
 
-            try {
-              await saveBreakfastsToServer();
-              await saveDeletedToServer();
-            } catch (err) {
-              console.error("Failed to save during delete:", err);
-              alert("Failed to delete: " + err.message);
-              if (newConfirmYes) newConfirmYes.removeEventListener("click", onYes);
-              return;
-            }
-
-            newConfirmModal.classList.remove('show');
-            alert(`"${b.name}" moved to Recently Deleted.`);
-            location.reload();
-
-            if (newConfirmYes) newConfirmYes.removeEventListener("click", onYes);
-          };
-
-          newConfirmYes.removeEventListener("click", onYes); // safe no-op
-          newConfirmYes.addEventListener("click", onYes);
-
-          const onNo = () => {
-            newConfirmModal.classList.remove('show');
-            newConfirmYes.removeEventListener("click", onYes);
-            newConfirmNo.removeEventListener("click", onNo);
-          };
-          newConfirmNo.removeEventListener("click", onNo);
-          newConfirmNo.addEventListener("click", onNo);
-
-        } else {
-          // Fallback: use browser confirm dialog so delete still works even when modal markup is absent
-          const ok = window.confirm(`Delete "${b.name}"? This will move it to Recently Deleted.`);
-          if (!ok) return;
-          deletedBreakfasts.push(b);
-          breakfasts = breakfasts.filter(x => x.id !== b.id);
-
-          try {
-            await saveBreakfastsToServer();
-            await saveDeletedToServer();
-          } catch (err) {
-            console.error("Failed to save during delete:", err);
-            alert("Failed to delete: " + err.message);
-            return;
-          }
-
-          alert(`"${b.name}" moved to Recently Deleted.`);
-          location.reload();
-        }
+        alert(`"${b.name}" moved to Recently Deleted.`);
+        location.reload();
       });
     }
 

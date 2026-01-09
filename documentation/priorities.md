@@ -1,46 +1,51 @@
 ## PRIORITIES
-### PRIORITY-1
- - VISION, Main features to be added
-### PRIORITY-2
- - Necessary & Important Bug Fixes
-### PRIORITY-3
- - Optional Features & minor bugs
+#### PRIORITY-1
+ - Vision, main features to be added.
+#### PRIORITY-2
+ - Necessary & important bug fixes.
+#### PRIORITY-3
+ - Optional features & minor bugs.
 
 Note: All priorities mentioned are future oriented. Current state is different. Bugs mentioned are current bugs to be fixed in future. Features are to be achieved in future. Current features can be viewed by accessing CHANGELOG.md or alternatively, viewing previous priorities.md file.
 
 ---
-### BSAv1.0.1 FUTURE PRIORITIES (to be achieved in next version)
-#### 🔴 PRIORITY 1 — Make storage mobile-friendly and offline-ready IndexedDB
+### BSA v1.1.0 – Development Priorities
 
-1. Move all data storage (breakfasts, notes, images) to IndexedDB
-   - Chosen over local file storage because browsers cannot reliably read/write local folders.
-   - Required to make the app work on mobile devices and as an offline PWA.
-   - Removes dependency on a Node server and makes the app usable anywhere once installed.
+#### 🔴 Priority 1 — Fix buggy UI behavior (especially on mobile)
 
+- Buttons sometimes not responding on phones
+- Restore action occasionally requiring retry
+- Edit, delete, and restore actions conflicting in certain flows
+- Make interactions predictable and consistent across devices
 
-#### 🟡 PRIORITY 2 — Necessary bug fixes (post-PWA)
+Goal: the app should always respond reliably to user actions, especially on mobile.
 
-1. Modal overlap prevention
-   (Reason: Mobile UX breaks badly with stacked modals)
-2. Disable background interaction when modal open
-   (Reason: Touch devices make this worse than desktop. Accidental taps happen easily)
-3. Cleanup images on permanent delete
-   (Reason: mobile, storage is more constrained)
+---
 
+#### 🟡 Priority 2 — Necessary bug fixes
 
-#### 🟢 PRIORITY 3 — UX / Quality Improvements
+- Image not restoring correctly on mobile after delete → restore
+- Save button sometimes working inconsistently during edit
+- Restore button becoming temporarily unresponsive
+- Prevent invalid action combinations (example: delete while editing)
 
-1. Fade-out UI toast notifications
-   For:
-   ✔ Add Breakfast
-   ✔ Move to Recently Deleted
-   ✔ Restore
-   ✔ Permanent Delete
-2. Recently Deleted UI — click row to expand
-   Click row → expand → show Restore/Delete
-3. Remove “append to script.js” checkbox & also remaining breakfast list code left in script.js
-4.	bfasts w/o images should show an option "Click to add image" when suggested which should take you to its breakfast page and let you add image, and when such a bfast is displayed upon clicking suggest button it should show only the name of the bfast and not show an unloaded image icon and text saying breakfast image.
-5.	bfast page should also let you edit image not only name and notes
-6.	thumbnails to be displayed when b'fasts are listed (all bfast, recently del)
-7. Warn only permanent deletion instead of normal delete
-8. clicking outside box (all list, recent del list, add) should close the box / action
+---
+
+#### 🟢 Priority 3 — Improvements & optional features
+
+##### UI & UX
+- Fade-out toast notifications (add / delete / restore / permanent delete)
+- Thumbnails in “All Breakfasts” and “Recently Deleted”
+- Recently Deleted: click row → expand → show Restore / Delete
+- Warn only on permanent deletion (single confirmation)
+- Disable background buttons when a modal is open
+- Clicking outside modal to close (future)
+
+##### Functionality
+- Remove unused “save to script.js” checkbox
+- Clean up deleted images after permanent delete (later)
+- Edit breakfast image from breakfast page (future)
+
+###### Visual polish
+- Fix mobile auto-zoom when image loads
+- Improve button weight / contrast consistency on mobile
