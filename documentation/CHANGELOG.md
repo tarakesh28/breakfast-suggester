@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## v1.2.0 – Mobile UI stabilization & image editing (current)
+
+### Added
+- Fixed-layout homepage: prevents UI jumping when images appear
+- Stable image slot on suggestion screen
+- Image editing on breakfast detail page:
+  - Add / Change / Remove image
+  - Changes staged until Save
+  - Cancel correctly discards staged edits
+- Modal background interaction lock
+- Cancel button during edit mode
+- Button size normalization for mobile
+- Text-selection blocked for headings and buttons
+
+### Fixed
+- iOS zoom-on-tap bug
+- Save / Edit / Delete interaction conflicts
+- Modal overlap glitches
+- Image persistence across edits
+- IndexedDB staging logic for image changes
+
+### Known issues
+- Restored breakfast images may appear delayed on mobile Safari
+- Restore button occasionally requires reopening modal
+- Some non-input text remains selectable
+
+These will be addressed in next release
+
+---
+
 ## BSA v1.1.1 — Cache versioning & mobile test indicator
 
 ### Added

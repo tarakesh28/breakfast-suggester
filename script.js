@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewWrapper = document.getElementById("preview-wrapper");
   const previewImage = document.getElementById("preview-image");
   const cancelAddBtn = document.getElementById("cancel-add");
-  const saveToScriptJsCheckbox = document.getElementById("save-to-scriptjs");
 
   const confirmText = document.getElementById("confirm-text");
   const confirmYes = document.getElementById("confirm-yes");
@@ -129,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (previewWrapper) previewWrapper.style.display = "none";
     if (previewImage) { previewImage.src = ""; previewImage._file = null; }
     if (fileInput) fileInput.value = "";
-    if (saveToScriptJsCheckbox) saveToScriptJsCheckbox.checked = false;
   }
   function closeAddModal() { 
     if (addModal) addModal.classList.remove('show');
@@ -156,24 +154,34 @@ document.addEventListener('DOMContentLoaded', () => {
   function suggestBreakfast() {
     if (!breakfasts || breakfasts.length === 0) {
       breakfastNameEl.innerText = "No breakfasts available. Add one!";
-      if (breakfastImageEl) breakfastImageEl.style.display = "none";
+      breakfastImageEl.style.display = "none";
+      document.getElementById("no-image-slot").style.display = "flex";
       return;
     }
+
     let candidate = null;
     for (let i = 0; i < 8; i++) {
       const pick = breakfasts[Math.floor(Math.random() * breakfasts.length)];
       if (pick.id !== lastSuggestedId) { candidate = pick; break; }
       candidate = pick;
     }
+
     lastSuggestedId = candidate.id;
-    breakfastNameEl.innerText = candidate.name || "Breakfast";
-    if (candidate.image) {
+
+    const noImgSlot = document.getElementById("no-image-slot");
+
+    if (candidate.image instanceof Blob) {
+      breakfastNameEl.innerText = candidate.name;
       breakfastImageEl.src = URL.createObjectURL(candidate.image);
       breakfastImageEl.style.display = "block";
+      noImgSlot.style.display = "none";
     } else {
-    breakfastImageEl.style.display = "none";
+      breakfastNameEl.innerText = candidate.name;
+      breakfastImageEl.style.display = "none";
+      noImgSlot.style.display = "flex";
     }
   }
+
 
   function openAllModal() {
     if (!allModal || !breakfastListEl) return;
@@ -192,44 +200,59 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!deletedModal || !deletedListEl) return;
     deletedBreakfasts = await getAll("deletedBreakfasts");
 
-    deletedListEl.innerHTML = "";
-    (deletedBreakfasts || []).forEach((b) => {
+    deletedListEl.replaceChildren(); // mobile-safe clear
+
+    for (const b of deletedBreakfasts) {
       const li = document.createElement("li");
       li.innerHTML = `<strong>${escapeHtml(b.name)}</strong>`;
+
       const restoreBtn = document.createElement("button");
       restoreBtn.textContent = "Restore";
       restoreBtn.style.marginLeft = "8px";
-      restoreBtn.addEventListener('click', async () => {
+
+      restoreBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
         restoreBtn.disabled = true;
-        // restore to main store
-        await put('breakfasts', b);
+
+        await put("breakfasts", b);
+        await remove("deletedBreakfasts", b.id);
+
         breakfasts.push(b);
-        // remove from deleted store
-        await remove('deletedBreakfasts', b.id);
         deletedBreakfasts = deletedBreakfasts.filter(x => x.id !== b.id);
+
         openDeletedModal();
       });
+
       const delForeverBtn = document.createElement("button");
       delForeverBtn.textContent = "Delete forever";
       delForeverBtn.style.marginLeft = "8px";
-      delForeverBtn.addEventListener('click', async () => {
-        if (!confirm(`Permanently delete "${b.name}"? This cannot be undone.`)) return;
-        await remove('deletedBreakfasts', b.id);
+
+      delForeverBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (!confirm(`Permanently delete "${b.name}"?`)) return;
+
+        await remove("deletedBreakfasts", b.id);
         deletedBreakfasts = deletedBreakfasts.filter(x => x.id !== b.id);
+
         openDeletedModal();
       });
+
       li.appendChild(document.createElement("br"));
       li.appendChild(restoreBtn);
       li.appendChild(delForeverBtn);
       deletedListEl.appendChild(li);
-    });
-    deletedModal.classList.add('show');
+    }
+
+    deletedModal.classList.add("show");
     document.body.classList.add("modal-open");
   }
+
 
   function viewBreakfastPage(id) {
     document.body.classList.remove("modal-open");
     const b = (breakfasts || []).find(x => x.id === id);
+    let stagedImage = b.image;  // holds temporary edits
+    let pendingImagePickMode = null;  // "change" or "add"
     if (!b) return alert("Breakfast not found.");
 
     const html = `
@@ -237,9 +260,16 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="breakfast-page">
         <div>
           <h1 id="breakfast-title">${escapeHtml(b.name)}</h1>
-          <img id="detail-image" style="display:none;">
-          <div id="no-image" style="width:320px;height:320px;display:flex;align-items:center;justify-content:center;background:#eee;border-radius:6px;">
-            No image
+
+          <div class="image-box">
+            <img id="detail-image" style="display:none;">
+            <div id="no-image" class="no-image-box">No image</div>
+          </div>
+
+          <div id="image-edit-controls" style="display:none; margin-top:10px;">
+            <button id="change-image-btn">Change Image</button>
+            <button id="add-image-btn">Add Image</button>
+            <button id="remove-image-btn">Remove Image</button>
           </div>
         </div>
 
@@ -257,75 +287,154 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
     document.body.innerHTML = html;
+
+    // ---- element refs ----
     const detailImg = document.getElementById("detail-image");
     const noImg = document.getElementById("no-image");
-
-    if (b.image instanceof Blob) {
-      detailImg.src = URL.createObjectURL(b.image);
-      detailImg.style.display = "block";
-      noImg.style.display = "none";
-    }
+    const imageControls = document.getElementById("image-edit-controls");
+    const changeImgBtn = document.getElementById("change-image-btn");
+    const addImgBtn = document.getElementById("add-image-btn");
+    const removeImgBtn = document.getElementById("remove-image-btn");
 
     const backMain = document.getElementById("back-main");
-    if (backMain) backMain.addEventListener("click", (e) => { e.preventDefault(); location.reload(); });
-
     const editBtn = document.getElementById("edit-btn");
     const saveBtn = document.getElementById("save-btn");
+    const deleteBtn = document.getElementById("delete-btn");
+
     const notesDisplay = document.getElementById("notes-display");
     const notesEditor = document.getElementById("notes-editor");
     const nameEditor = document.getElementById("name-editor");
     const titleEl = document.getElementById("breakfast-title");
 
-    if (editBtn) editBtn.addEventListener("click", () => {
+    // ---- initial image render ----
+    function renderImage() {
+      if (stagedImage instanceof Blob) {
+        detailImg.src = URL.createObjectURL(stagedImage);
+        detailImg.style.display = "block";
+        noImg.style.display = "none";
+      } else {
+        detailImg.style.display = "none";
+        noImg.style.display = "flex";
+      }
+    }
+    renderImage();
+
+    // ---- back ----
+    backMain.onclick = (e) => {
+      e.preventDefault();
+      location.reload();
+    };
+
+    // ---- enter edit mode ----
+    editBtn.onclick = () => {
       nameEditor.value = b.name;
       notesEditor.value = b.notes || "";
+
       titleEl.style.display = "none";
       notesDisplay.style.display = "none";
+
       nameEditor.style.display = "block";
       notesEditor.style.display = "block";
+
       editBtn.style.display = "none";
       saveBtn.style.display = "inline-block";
-    });
+      deleteBtn.style.display = "none";
 
-    if (saveBtn) saveBtn.addEventListener("click", async () => {
-      const newName = nameEditor.value.trim() || b.name;
-      const newNotes = notesEditor.value;
-      b.name = newName;
-      b.notes = newNotes;
-      await put("breakfasts", b);
-      titleEl.textContent = b.name;
+      // show image edit controls
+      imageControls.style.display = "block";
+
+      if (b.image instanceof Blob) {
+        changeImgBtn.style.display = "inline-block";
+        addImgBtn.style.display = "none";
+      } else {
+        changeImgBtn.style.display = "none";
+        addImgBtn.style.display = "inline-block";
+      }
+      removeImgBtn.style.display = "inline-block";
+
+      // create cancel button
+      let cancelEdit = document.getElementById("cancel-edit-btn");
+      if (!cancelEdit) {
+        cancelEdit = document.createElement("button");
+        cancelEdit.id = "cancel-edit-btn";
+        cancelEdit.textContent = "Cancel";
+        saveBtn.insertAdjacentElement("afterend", cancelEdit);
+      }
+
+      cancelEdit.onclick = () => {
+        stagedImage = b.image;   // discard staged changes
+        renderImage();
+        exitEditMode();
+        cancelEdit.remove();
+      };
+    };
+
+    function exitEditMode() {
       titleEl.style.display = "block";
-      notesDisplay.textContent = b.notes || "(No notes yet)";
       notesDisplay.style.display = "block";
+
       nameEditor.style.display = "none";
       notesEditor.style.display = "none";
+
       editBtn.style.display = "inline-block";
       saveBtn.style.display = "none";
-    });
-
-    // re-select newly created confirm modal/buttons from the new DOM
-    const newConfirmModal = document.getElementById("confirm-modal");
-    const newConfirmYes = document.getElementById("confirm-yes");
-    const newConfirmNo = document.getElementById("confirm-no");
-    const deleteBtn = document.getElementById("delete-btn");
-
-    if (deleteBtn) {
-      deleteBtn.addEventListener("click", async () => {
-        // Move breakfast to Recently Deleted (IndexedDB)
-        deletedBreakfasts.push(b);
-        const deletedCopy = structuredClone(b);
-        await put("deletedBreakfasts", deletedCopy);
-        await remove("breakfasts", b.id);
-
-        // Remove from active breakfasts (IndexedDB)
-        breakfasts = breakfasts.filter(x => x.id !== b.id);
-
-        alert(`"${b.name}" moved to Recently Deleted.`);
-        location.reload();
-      });
+      deleteBtn.style.display = "inline-block";
+      imageControls.style.display = "none";
     }
 
+    // ---- save edits ----
+    saveBtn.onclick = async () => {
+      b.name = nameEditor.value.trim() || b.name;
+      b.notes = notesEditor.value;
+      b.image = stagedImage;     // commit staged image
+      await put("breakfasts", b);
 
+      titleEl.textContent = b.name;
+      notesDisplay.textContent = b.notes || "(No notes yet)";
+
+      exitEditMode();
+
+      const cancelEdit = document.getElementById("cancel-edit-btn");
+      if (cancelEdit) cancelEdit.remove();
+    };
+
+    // ---- image buttons ----
+    changeImgBtn.onclick = () => {
+      pendingImagePickMode = "change";
+      fileInput.click();
+    };
+
+    addImgBtn.onclick = () => {
+      pendingImagePickMode = "add";
+      fileInput.click();
+    };
+
+    removeImgBtn.onclick = () => {
+      stagedImage = null;   // only stage
+      renderImage();
+    };
+
+    // ---- shared file input handler ----
+    fileInput.onchange = (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+
+      stagedImage = f;     // stage only, do not save yet
+      renderImage();       // preview immediately
+
+      pendingImagePickMode = null;
+      fileInput.value = ""; // reset so same file can be re-picked if needed
+    };
+
+    // ---- delete breakfast ----
+    deleteBtn.onclick = async () => {
+      deletedBreakfasts.push(structuredClone(b));
+      await put("deletedBreakfasts", structuredClone(b));
+      await remove("breakfasts", b.id);
+      breakfasts = breakfasts.filter(x => x.id !== b.id);
+      alert(`"${b.name}" moved to Recently Deleted.`);
+      location.reload();
+    };
   }
 
   function escapeHtml(str) {

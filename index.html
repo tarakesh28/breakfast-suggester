@@ -22,7 +22,10 @@
 
     <div id="breakfast-suggestion">
       <h2 id="breakfast-name">Click "Suggest Breakfast"!</h2>
-      <img id="breakfast-image" src="" alt="Breakfast Image" style="display:none;" />
+      <div class="image-slot">
+        <img id="breakfast-image" src="" alt="Breakfast Image" style="display:none;" />
+        <div id="no-image-slot">No image</div>
+      </div>    
     </div>
 
     <div class="button-container">
@@ -50,7 +53,7 @@
   <div id="add-breakfast-modal" class="modal">
     <div class="modal-content small">
       <span class="close-add">&times;</span>
-      <h2>Add Breakfast (will write files to disk)</h2>
+      <h2>Add Breakfast</h2>
 
       <form id="add-breakfast-form">
         <label>
@@ -67,10 +70,6 @@
           <p>Preview:</p>
           <img id="preview-image" src="" alt="preview" style="max-width:200px;max-height:150px;" />
         </div>
-
-        <label style="font-size:0.9rem;">
-          <input type="checkbox" id="save-to-scriptjs"> Also try to append to <code>script.js</code>
-        </label>
 
         <div class="form-buttons">
           <button type="submit">Save</button>
@@ -100,7 +99,7 @@
     </div>
   </div>
 
-  <div style="position:fixed;bottom:4px;left:6px;font-size:10px;opacity:0.6;">v1.1.1</div>
+  <div style="position:fixed;bottom:4px;left:15px;font-size:10px;opacity:0.6;">v1.2.0</div>
 
   <script type="module" src="script.js"></script>
 

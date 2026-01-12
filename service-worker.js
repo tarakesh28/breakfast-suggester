@@ -1,4 +1,4 @@
-const CACHE_NAME = "bsa-cache-v1.1.1";
+const CACHE_NAME = "bsa-cache-v1.2.0";
 
 const FILES_TO_CACHE = [
   "./",

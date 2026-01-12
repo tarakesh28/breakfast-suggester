@@ -1,3 +1,11 @@
+html {
+  touch-action: manipulation;
+}
+
+button {
+  touch-action: manipulation;
+}
+
 /* Basic layout */
 body {
   font-family: Arial, sans-serif;
@@ -16,20 +24,38 @@ body {
   margin-bottom: 20px;
 }
 
-#breakfast-image {
+/* ---- Fixed homepage image slot ---- */
+
+.image-slot {
   width: 300px;
   height: 300px;
+  margin: 20px auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#breakfast-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  margin-top: 20px;
+  border-radius: 8px;
   display: none;
 }
 
-/* Center breakfast image */
-#breakfast-suggestion img {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+#no-image-slot {
+  width: 100%;
+  height: 100%;
+  background: #eee;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  font-size: 16px;
 }
+
 
 .button-container {
   margin-top: 40px;
@@ -63,12 +89,13 @@ body {
 
 /* Buttons */
 button {
-  padding: 10px 16px;
-  margin: 8px;
+  padding: 8px 14px;
+  margin: 6px;
   cursor: pointer;
   border-radius: 6px;
   border: 1px solid #ccc;
   background: white;
+ /* font-size: 100px;*/
 }
 
 /* Modal backdrop */
@@ -88,15 +115,15 @@ button {
   background-color: #fff;
   margin: 7% auto;
   padding: 20px;
-  width: 60%;
-  max-width: 700px;
+  width: 600px;
+  max-width: 70%;
   border-radius: 8px;
   position: relative; 
 }
 
 .modal-content.small {
   width: 360px;
-  max-width: 90%;
+  max-width: 80%;
 }
 
 /* show modal when JS adds class "show" */
@@ -114,7 +141,7 @@ button {
 .close-deleted {
   position: absolute;
   top: 10px;
-  right: 12px;
+  right: 16px;
   font-size: 28px;
   cursor: pointer;
   user-select: none;
@@ -226,4 +253,47 @@ body.modal-open {
 
 body.modal-open *:not(.modal):not(.modal *) {
   pointer-events: none;
+}
+
+input, textarea, button {
+  font-size: 16px;
+}
+
+.form-buttons button {
+  background-color: #31abed;
+  color: white;
+  border: none;
+}
+
+.form-buttons button#cancel-add {
+  background-color: #ddd;
+  color: #333;
+}
+
+.image-box {
+  width: 320px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-image-box {
+  width: 100%;
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eee;
+  border-radius:6px;
+}
+
+#image-edit-controls button {
+  margin: 6px;
+}
+
+h1, h2, h3, button, img {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
