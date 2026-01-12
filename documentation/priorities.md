@@ -9,7 +9,7 @@
 Note: All priorities mentioned are future oriented. Current state is different. Bugs mentioned are current bugs to be fixed in future. Features are to be achieved in future. Current features can be viewed by accessing CHANGELOG.md or alternatively, viewing previous priorities.md file.
 
 ---
-### BSA v1.1.0 – Development Priorities
+### BSA v1.1.1 – Development Priorities
 
 #### 🔴 Priority 1 — Fix buggy UI behavior (especially on mobile)
 

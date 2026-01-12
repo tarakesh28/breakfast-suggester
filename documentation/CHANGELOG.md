@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## BSA v1.1.1 — Cache versioning & mobile test indicator
+
+### Added
+- Cache version bump system in service worker  
+  Ensures older cached files are replaced when new updates are deployed.
+
+- Visible version label in UI (v1.1.1)  
+  Helps confirm correct version during mobile testing.
+
+- Developer notes for testing, caching, and service worker behavior  
+  Keeps important dev workflow instructions documented.
+
+### Changed
+- Service worker cache name updated  
+  Prevents stale files from persisting after updates.
+
+### Why
+- Makes update testing easier on mobile devices  
+- Prevents caching issues during future deployments  
+- Establishes a stable update workflow before next development phase
+
+---
+
 ## BSA v1.1.0
 
 ### Added
